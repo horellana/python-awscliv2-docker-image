@@ -8,8 +8,14 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
       - name: Add SHORT_SHA env property with commit short sha
         run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
+
+      - name: Add PYTHON_VERSION env property, parsed from Dockerfile
+        run: echo "PYTHON_VERSION=`perl -ne 'print $1  if /python:(.+)-slim/' < Dockerfile`" >> $GITHUB_ENV
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -29,13 +35,13 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_HUB_USER }}/python3-awscliv2:${{ env.SHORT_SHA }}
       -
-        name: Build and push with tag
+        name: Build and push with python version tag
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USER }}/python3-awscliv2:3.9.13
+          tags: ${{ secrets.DOCKER_HUB_USER }}/python3-awscliv2:${{ env.PYTHON_VERSION }}
       -
-        name: Build and push with latest
+        name: Build and push with latest tag
         uses: docker/build-push-action@v3
         with:
           push: true
